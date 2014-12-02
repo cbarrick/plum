@@ -104,6 +104,16 @@ Agent.initialize(N, Order) := true :-
 	!.
 
 
+%% player(?P)
+% True when P is a player. Players are objects refering to players of the game.
+
+player(player{
+	id: _,
+	name: _,
+	hand: _
+}).
+
+
 %% make_players
 % A helper predicate to construct players given lists of hands.
 
@@ -111,16 +121,17 @@ make_players(Hands, Players) :-
 	make_players_(Hands, Players, 1).
 
 make_players_([], [], _).
-make_players_([H|Hands], [P|Players], N) :-
+make_players_([H|Hands], [P|Players], ID) :-
+	player(P),
 	P = player{
 		id: ID,
-		name: ID,
+		name: Name,
 		hand: H
 	},
 	chain(H, #<),
-	N1 is N + 1,
-	atom_concat(p, N, ID),
-	make_players_(Hands, Players, N1).
+	ID1 is ID + 1,
+	atom_concat(p, ID, Name),
+	make_players_(Hands, Players, ID1).
 
 
 % Main Loop
@@ -249,8 +260,7 @@ Agent.interpret_(Statement) := NewState :-
 	NewState = Agent.put(current_suggestion, suggestion(Player, SID, WID, RID)),
 
 	% Print feedback.
-	nth1(PlayerNumber, Agent.players, Player),
-	format("OK. p~w is suggesting ", [PlayerNumber]),
+	format("~w is suggesting ", [Player.name]),
 	print_card(SID),
 	write(" with the "),
 	print_card(WID),
@@ -396,7 +406,8 @@ Agent.interpret_(Statement) := Agent :-
 		[]
 	),
 
-	forall(nth1(Index, Agent.players, Player), (
+	trace,
+	forall(member(Player, Agent.players), (
 		Hand = Player.hand,
 		findnsols(2, Hand, label(Hand), Hands),
 		length(Hands, L),
@@ -405,7 +416,7 @@ Agent.interpret_(Statement) := Agent :-
 			(Player = Agent.self ->
 				write("I have ")
 			;
-				format("p~w has ", [Index])
+				format("~w has ", [Player.name])
 			),
 			print_hand(Hand),
 			nl
@@ -508,6 +519,25 @@ Agent.interpret_(Statement) := NewState :-
 	).
 
 
+% `refer to Player as Alias.`
+% --------------------------------------------------
+Agent.interpret_(Statement) := NewState :-
+	Statement = statement(
+		Agent.self,
+		refers,
+		'',
+		[
+			as(Alias),
+			to(Player)
+		]
+	),
+
+	NewPlayer = Player.put(name, Alias),
+	Player = Agent.select_player(_,OtherPlayers),
+	NewState = Agent.put(players, [NewPlayer|OtherPlayers]),
+	!.
+
+
 
 
 % `quit.`
@@ -590,12 +620,15 @@ Agent.findall_cases() := Agent.cache :-
 	reverse(CacheBackwards, Agent.cache).
 
 
-%% +Agent.get_player(+Order) := -Player
-% Returns the player at a given order. E.g., and Order of 1 returns player one.
+%% +Agent.select_player(?NameOrID, ?Rest) := ?Player
+% True when Player is a member of Agent.players with the given NameOrID and Rest
+% is the list of other players.
 
-Agent.get_player(P) := Player :-
+Agent.select_player(Ref, Rest) := P :-
 	agent(Agent),
-	nth1(P, Agent.players, Player).
+	player(P),
+	(P.id = Ref ; P.name = Ref),
+	select(P, Agent.players, Rest).
 
 
 %% +Agent.get_theory() := -Case

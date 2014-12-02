@@ -42,10 +42,10 @@
 % - A term `card(C,ID)` where C is a card. This recursive definition is useful
 %   to deal with cards in general without knowing their type.
 
-card( card(C,ID), ID )       :- !, card(C, ID).
-card( suspect(Name,ID), ID ) :- !, suspect(Name, ID).
-card( weapon(Name,ID),  ID ) :- !, weapon(Name, ID).
-card( room(Name,ID),    ID ) :- !, room(Name, ID).
+card( card(C,ID), ID )       :- nonvar(C), !, card(C, ID).
+card( suspect(Name,ID), ID ) :- nonvar(Name), !, suspect(Name, ID).
+card( weapon(Name,ID),  ID ) :- nonvar(Name), !, weapon(Name, ID).
+card( room(Name,ID),    ID ) :- nonvar(Name), !, room(Name, ID).
 card( Name, ID ) :- suspect(Name, ID).
 card( Name, ID ) :- weapon(Name, ID).
 card( Name, ID ) :- room(Name, ID).

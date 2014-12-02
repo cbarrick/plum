@@ -117,6 +117,9 @@ verb(3, debugs) --> word(debugs).
 verb(2, quits) --> word(quit).
 verb(3, quits) --> word(quits).
 
+verb(2, refers) --> word(refer).
+verb(3, refers) --> word(refers).
+
 
 %% noun(+Agent, ?Noun)//
 % Consumes a noun, optionally preceeded by a determiner.
@@ -167,10 +170,16 @@ player(Agent, Player) -->
 
 player(Agent, Player) -->
 	"p",
-	integer(P),
+	integer(ID),
 	blanks,
 	{
-		Player = Agent.get_player(P)
+		Player = Agent.select_player(ID,_)
+	}.
+
+player(Agent, Player) -->
+	word(Name),
+	{
+		Player = Agent.select_player(Name,_)
 	}.
 
 
@@ -247,7 +256,8 @@ node( node(point(X,Y)) ) -->
 % Consumes a prepositional phrase or a list of prepositional phrases. Ms is the
 % sorted list of phrases. Each phrase is a compound term whose functor is the
 % preposition used and whose only parameter is the object of the preposition.
-% The prepositions understood by the parser are "in", "with", "of", and "from".
+% The prepositions understood by the parser are "in", "with", "of", "from",
+% "as", and "to".
 
 modifiers(Agent, Ms) -->
 	modifier(Agent, H),
@@ -261,7 +271,7 @@ modifier(Agent, M) -->
 	word(Preposition),
 	noun(Agent, Object),
 	{
-		member(Preposition, [in, with, of, from]),
+		member(Preposition, [in, with, of, from, as, to]),
 		functor(M, Preposition, 1),
 		arg(1, M, Object)
 	}.
