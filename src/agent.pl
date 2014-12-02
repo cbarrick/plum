@@ -406,7 +406,6 @@ Agent.interpret_(Statement) := Agent :-
 		[]
 	),
 
-	trace,
 	forall(member(Player, Agent.players), (
 		Hand = Player.hand,
 		findnsols(2, Hand, label(Hand), Hands),
