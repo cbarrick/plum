@@ -51,46 +51,43 @@ card( Name, ID ) :- weapon(Name, ID).
 card( Name, ID ) :- room(Name, ID).
 
 
-% The additional comments beside each card are to mark who has what in the
-% hypothetical game I use when testing.
-
 %% suspect(?Name, ?ID)
 % Name is an atom naming a suspect card in the game and ID is the unique integer
 % identifier for that card.
 
-suspect(green,      1). %1
-suspect(mustard,    2). %2
-suspect(peacock,    3). %3
-suspect(plum,       4). %4
+suspect(green,      1).
+suspect(mustard,    2).
+suspect(peacock,    3).
+suspect(plum,       4).
 suspect(scarlet,    5).
-suspect(white,      6). %1
+suspect(white,      6).
 
 
 %% weapon(?Name, ?ID)
 % Name is an atom naming a weapon card in the game and ID is the unique integer
 % identifier for that card.
 
-weapon(candlestick, 7). %2
-weapon(knife,       8). %3
-weapon(pipe,        9). %4
+weapon(candlestick, 7).
+weapon(knife,       8).
+weapon(pipe,        9).
 weapon(revolver,   10).
-weapon(rope,       11). %1
-weapon(wrench,     12). %2
+weapon(rope,       11).
+weapon(wrench,     12).
 
 
 %% room(?Name, ?ID)
 % Name is an atom naming a room card in the game and ID is the unique integer
 % identifier for that card.
 
-room(ballroom,     13). %3
-room(billiard,     14). %4
+room(ballroom,     13).
+room(billiard,     14).
 room(conservatory, 15).
-room(dining,       16). %1
-room(hall,         17). %2
-room(kitchen,      18). %3
-room(library,      19). %4
-room(lounge,       20). %1
-room(study,        21). %2
+room(dining,       16).
+room(hall,         17).
+room(kitchen,      18).
+room(library,      19).
+room(lounge,       20).
+room(study,        21).
 
 
 %% print_card(+Card)
