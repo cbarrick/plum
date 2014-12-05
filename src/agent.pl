@@ -181,6 +181,12 @@ Agent.play() := true :-
 Agent.get_user_input() := Statement :-
 	write("> "),
 	read_line_to_codes(user_input, Line),
+
+	% Add the line to the readline history.
+	% http://www.swi-prolog.org/pldoc/man?section=readline
+	atom_codes(LineAtom, Line),
+	rl_add_history(LineAtom),
+
 	parse(Agent, Line, Statement).
 
 
@@ -214,14 +220,15 @@ Agent.get_user_input() := Statement :-
 %     agent either responds with the card it wishes to reveal or responds that
 %     it has no cards from the current suggestion.
 %
-% "show thoughts.":
-%     This statement instructs the agent to reveal its current thoughts on the
-%     game. The thoughts consist of possible solutions and the agent's certainty
+% "show cases.":
+%     This statement instructs the agent to reveal its current cases on the
+%     game. The cases consist of possible solutions and the agent's certainty
 %     about each one.
 %
-% "show hands.":
-%     This statement instructs the agent to reveal player's hands which it knows
-%     entirely.
+% "show status.":
+%     This statement instructs the agent to reveal various information about the
+%     current status of the game, including what the most recent suggestion was
+%     and the contents of opponents hands.
 %
 % "move Distance from Location.":
 %     This statement alerts the agent that it is its turn to move, and that it
@@ -258,15 +265,6 @@ Agent.interpret_(Statement) := NewState :-
 
 	% Set the current suggestion.
 	NewState = Agent.put(current_suggestion, suggestion(Player, SID, WID, RID)),
-
-	% Print feedback.
-	format("~w is suggesting ", [Player.name]),
-	print_card(SID),
-	write(" with the "),
-	print_card(WID),
-	write(" in the "),
-	print_card(RID),
-	write(".\n"),
 	!.
 
 
@@ -284,8 +282,8 @@ Agent.interpret_(Statement) := NewState :-
 	% Constrain the hand of player P to contain Card.
 	element(_, Player.hand, ID),
 
-	% Update the state.
-	NewState = Agent.update(),
+	% We must clear the cache since we have new constraints.
+	NewState = Agent.clear_cache().put(current_suggestion, _),
 	!.
 
 
@@ -303,8 +301,8 @@ Agent.interpret_(Statement) := NewState :-
 	Agent.current_suggestion = suggestion(_, SID, WID, RID),
 	nonempty_intersection(Player.hand, [SID, WID, RID]),
 
-	% Update the state.
-	NewState = Agent.update(),
+	% We must clear the cache since we have new constraints.
+	NewState = Agent.clear_cache().put(current_suggestion, _),
 	!.
 
 
@@ -320,8 +318,8 @@ Agent.interpret_(Statement) := NewState :-
 	Agent.current_suggestion = suggestion(_, SID, WID, RID),
 	empty_intersection(Player.hand, [SID,WID,RID]),
 
-	% Update the state.
-	NewState = Agent.update(),
+	% We must clear the cache since we have new constraints.
+	NewState = Agent.clear_cache(),
 	!.
 
 
@@ -336,6 +334,7 @@ Agent.interpret_(Statement) := NewState :-
 	),
 
 	% Reveal the card which has been already been revealed the most.
+	nonvar(Agent.current_suggestion),
 	Agent.current_suggestion = suggestion(_, S, W, R),
 	label(Agent.self.hand),
 	findall([Count,Card], (
@@ -379,13 +378,13 @@ Agent.interpret_(Statement) := Agent :-
 	!.
 
 
-% `show thoughts.`
+% `show cases.`
 % --------------------------------------------------
 Agent.interpret_(Statement) := Agent :-
 	Statement = statement(
 		Agent.self,
 		shows,
-		thoughts,
+		cases,
 		[]
 	),
 
@@ -396,16 +395,33 @@ Agent.interpret_(Statement) := Agent :-
 	!.
 
 
-% `show hands.`
+% `show status.`
 % --------------------------------------------------
 Agent.interpret_(Statement) := Agent :-
 	Statement = statement(
 		Agent.self,
 		shows,
-		hands,
+		status,
 		[]
 	),
 
+	% Show the most recent suggestion if one exists.
+	(nonvar(Agent.current_suggestion) ->
+		Agent.current_suggestion = suggestion(P,S,W,R),
+		(P = Agent.self ->
+			write("I am suggesting ")
+		;
+			format("~w is suggesting ", [P.name])
+		),
+		print_card(S),
+		write(" with "),
+		print_card(W),
+		write(" in "),
+		print_card(R),
+		write(".\n")
+	; true),
+
+	% If the entire contents of a player's hand is known, print it.
 	forall(member(Player, Agent.players), (
 		Hand = Player.hand,
 		findnsols(2, Hand, label(Hand), Hands),
@@ -651,16 +667,6 @@ Agent.get_certainty(S, W, R) := Certainty :-
 % Clears the solution cache.
 
 Agent.clear_cache() := Agent.put(cache, _) :- agent(Agent).
-
-
-%% +Agent.update() := -NewState
-% This helper runs after each statement. It prints the current best solution.
-
-Agent.update() := NewState :-
-	agent(Agent),
-	NewState = Agent.clear_cache(),
-	Theory = NewState.get_theory(),
-	print_case(Theory).
 
 
 %% print_case(+Case)
