@@ -169,9 +169,9 @@ Agent.play() := true :-
 			write(" in the "),
 			print_card(Room),
 			write("!\n")
-		;
-			NewState.play()
-		)
+		; true),
+
+		NewState.play()
 	), user_quit, true).
 
 
