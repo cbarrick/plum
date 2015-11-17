@@ -102,7 +102,7 @@ Stuart Russell and Peter Norvig. 2010. Artificial Intelligence: A Modern Approac
 
 Markus Triska. 2012. The Finite Domain Constraint Solver of SWI-Prolog. FLOPS 7294 (2012), 307-316. http://www.swi-prolog.org/man/clpfd.html.
 
-2002. Clue Instruction Book. Hasbro, Pawtucket, RI.
+\2002. Clue Instruction Book. Hasbro, Pawtucket, RI.
 
 
 ## Appendix A: Logs for Game 1
